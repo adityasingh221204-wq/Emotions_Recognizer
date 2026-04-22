@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>MoodScan Pro — Real-Time AI Face Emotion Detector</title>
+  <meta name="description" content="MoodScan Pro uses on-device AI to detect your facial emotions in real time. Privacy-first: no video ever leaves your device." />
+  <meta name="keywords" content="face emotion detection, AI emotion recognition, real-time emotion, face-api.js, mood detection" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="MoodScan Pro" />
+  <meta property="og:description" content="Real-time AI face emotion detection — 100% on-device, privacy-first." />
+  <meta property="og:type" content="website" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Libraries (CDN) -->
+  <!-- face-api.js — vladmandic fork: WebGL-accelerated, <200ms inference -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+  <!-- Chart.js v4 — Doughnut + Line charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     LOADER OVERLAY
+     ══════════════════════════════════════════════════════════ -->
+<div id="loaderOverlay" role="status" aria-label="Loading AI models">
+  <div class="loader-logo" aria-hidden="true">🧠</div>
+  <h2 class="loader-title text-gradient">MoodScan Pro</h2>
+  <div class="loader-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+    <div class="loader-bar-fill" id="loaderFill"></div>
+  </div>
+  <p class="loader-status" id="loaderStatus">Initialising…</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PRIVACY MODAL
+     ══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="privacyModal" role="dialog" aria-modal="true" aria-labelledby="privacyTitle">
+  <div class="glass-card modal-box" style="text-align:center">
+    <span class="modal-icon" aria-hidden="true">🔒</span>
+    <h2 id="privacyTitle" data-i18n="ui.privacyTitle">Privacy First</h2>
+    <p class="modal-body" data-i18n="ui.privacyBody">
+      MoodScan Pro runs entirely on your device. All video processing happens locally — no images, no video, no biometric data is ever sent to any server.
+    </p>
+    <button class="btn btn-primary btn-full" id="privacyAcceptBtn" data-i18n="ui.privacyAccept">
+      I understand — let's scan! 🚀
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     SETTINGS MODAL
+     ══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+  <div class="glass-card modal-box">
+    <div class="modal-header">
+      <h2 id="settingsTitle" class="modal-title" data-i18n="ui.settingsTitle">Settings</h2>
+      <button class="modal-close" data-close-modal aria-label="Close settings">✕</button>
+    </div>
+
+    <!-- Theme -->
+    <div class="settings-row">
+      <div>
+        <div class="settings-label" data-i18n="ui.themeLabel">Theme</div>
+      </div>
+      <button class="btn btn-sm" id="themeToggleBtn" title="Toggle theme">🌙</button>
+    </div>
+
+    <!-- Language -->
+    <div class="settings-row">
+      <div>
+        <div class="settings-label" data-i18n="ui.langLabel">Language</div>
+      </div>
+      <select class="lang-select" id="langSelect" aria-label="Select language">
+        <option value="en">🇬🇧 English</option>
+        <option value="hi">🇮🇳 हिंदी</option>
+        <option value="es">🇪🇸 Español</option>
+      </select>
+    </div>
+
+    <!-- Feedback stats -->
+    <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:.7rem">
+      <div class="settings-label">📊 Feedback Data (for model retraining)</div>
+      <div class="feedback-stats" id="feedbackStatsBox">
+        <div class="fbs-item"><div class="fbs-val" id="fbs-total">0</div><div class="fbs-lbl">Total</div></div>
+        <div class="fbs-item"><div class="fbs-val" style="color:var(--success)" id="fbs-correct">0</div><div class="fbs-lbl">Correct</div></div>
+        <div class="fbs-item"><div class="fbs-val" style="color:var(--danger)" id="fbs-incorrect">0</div><div class="fbs-lbl">Corrected</div></div>
+      </div>
+      <div style="display:flex;gap:.5rem;width:100%">
+        <button class="btn btn-sm" id="exportFeedbackBtn" data-i18n="ui.exportBtn">📥 Export Feedback CSV</button>
+        <button class="btn btn-sm" id="exportSessionBtn" data-i18n="ui.exportSession">📊 Export Session</button>
+      </div>
+    </div>
+
+    <div style="margin-top:.8rem;font-size:.72rem;color:var(--text-subtle);line-height:1.6">
+      ⚙️ MoodScan Pro v2.0 &nbsp;·&nbsp; TinyFaceDetector + FaceExpressionNet &nbsp;·&nbsp; WebGL Accelerated<br/>
+      🧠 Model: FER+ 7-class (face-api.js on-device)
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     APP HEADER
+     ══════════════════════════════════════════════════════════ -->
+<header class="app-header">
+  <a href="#" class="header-logo" aria-label="MoodScan Pro home">
+    <span class="logo-icon" aria-hidden="true">😮</span>
+    <span class="logo-text text-gradient">MoodScan</span>
+    <span class="logo-badge">PRO</span>
+  </a>
+  <span class="header-tagline" data-i18n="tagline">Real-time AI Emotion Intelligence</span>
+
+  <div class="header-right">
+    <select class="lang-select" id="langSelectHeader" aria-label="Language">
+      <option value="en">🇬🇧 EN</option>
+      <option value="hi">🇮🇳 HI</option>
+      <option value="es">🇪🇸 ES</option>
+    </select>
+    <button class="icon-btn" id="themeToggleBtn" title="Toggle dark/light mode" aria-label="Toggle theme">🌙</button>
+    <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Open settings">⚙️</button>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN CONTENT
+     ══════════════════════════════════════════════════════════ -->
+<main class="app-main">
+
+  <!-- ── Primary Grid: Camera + Emotion Panel ── -->
+  <div class="main-grid">
+
+    <!-- ── LEFT: Camera Panel ── -->
+    <section class="cam-panel" aria-label="Camera feed">
+
+      <div class="cam-wrapper">
+        <!-- Live video -->
+        <video id="videoEl" autoplay muted playsinline aria-label="Camera feed"></video>
+        <!-- Face overlay canvas (mirrored) -->
+        <canvas id="overlayCanvas" aria-hidden="true"></canvas>
+
+        <!-- Camera start placeholder -->
+        <div id="startCamOverlay">
+          <div class="cam-icon" aria-hidden="true">📷</div>
+          <button class="btn btn-primary" id="startCamBtn" data-i18n="ui.enableCamera">Enable Camera</button>
+          <p id="camHint" data-i18n="ui.camHint">Camera access required for emotion detection</p>
+        </div>
+
+        <!-- No-face overlay -->
+        <div id="noFaceOverlay" aria-live="polite">
+          <span class="nf-icon" aria-hidden="true">🙈</span>
+          <span data-i18n="ui.noFace">No face detected — move closer</span>
+        </div>
+
+        <!-- Live badge -->
+        <div class="live-badge" aria-label="Live">
+          <span class="live-dot" aria-hidden="true"></span>
+          <span data-i18n="ui.liveLabel">LIVE</span>
+        </div>
+
+        <!-- Performance badges -->
+        <div class="perf-row" aria-label="Performance metrics">
+          <div class="perf-badge" id="infBadge" title="Inference time">--ms</div>
+          <div class="perf-badge" id="fpsBadge" title="Frames per second" style="color:var(--accent2)">--fps</div>
+        </div>
+      </div>
+
+      <!-- Emotion chip strip -->
+      <div id="emotionStrip" class="emotion-strip" role="list" aria-label="Emotion probabilities"></div>
+
+    </section>
+
+    <!-- ── RIGHT: Emotion Panel ── -->
+    <aside class="emotion-panel" aria-label="Emotion analysis">
+
+      <!-- 1. Main emotion card -->
+      <div class="glass-card main-emotion-card slide-up">
+        <div class="emotion-display">
+          <div id="bigEmojiWrap" class="big-emoji-wrap" aria-hidden="true">
+            <span id="bigEmoji">🤔</span>
+          </div>
+          <div id="emotionNameDisplay" style="font-size:1.75rem;font-weight:900">Waiting…</div>
+          <div id="emotionConfDisplay" style="font-size:.78rem;color:var(--text-muted);margin-top:3px">
+            Point your face at the camera
+          </div>
+        </div>
+
+        <!-- Probability bars -->
+        <div class="prob-section">
+          <div class="prob-section-label" data-i18n="ui.confidenceLabel">Confidence</div>
+          <div id="probBarsContainer" aria-label="Emotion probability bars"></div>
+        </div>
+      </div>
+
+      <!-- 2. AI Response card -->
+      <div class="glass-card response-card slide-up" style="animation-delay:.08s">
+        <div class="response-label" data-i18n="ui.aiSays">AI says:</div>
+        <p id="responseText" class="response-text">Your mood analysis will appear here once a face is detected. 😊</p>
+      </div>
+
+      <!-- 3. Feedback card -->
+      <div class="glass-card feedback-card slide-up" style="animation-delay:.14s">
+        <div class="feedback-label" data-i18n="ui.feedbackTitle">Was this correct?</div>
+        <div id="feedbackBtns" class="feedback-btns">
+          <button class="btn btn-yes" id="feedbackYesBtn" data-i18n="ui.feedbackYes">✓ Yes, spot on!</button>
+          <button class="btn btn-no"  id="feedbackNoBtn"  data-i18n="ui.feedbackNo">✗ No, correct it</button>
+        </div>
+        <div id="feedbackThanks" data-i18n="ui.feedbackThanks">Thanks! Saved for model training 💾</div>
+        <!-- Correction picker injected here by feedback.js -->
+        <div id="correctionPicker" style="margin-top:.6rem"></div>
+      </div>
+
+      <!-- 4. GIF card -->
+      <div class="glass-card gif-card slide-up" style="animation-delay:.2s">
+        <div class="gif-label" data-i18n="ui.gifVibe">🎬 Your vibe right now</div>
+        <div id="gifFrame" class="gif-frame">
+          <div class="gif-placeholder">
+            <span class="gp-icon" aria-hidden="true">🎭</span>
+            <p>GIF will appear here</p>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       ANALYTICS DASHBOARD
+       ══════════════════════════════════════════════════════════ -->
+  <section class="dashboard-section" aria-label="Emotion analytics dashboard">
+
+    <div class="dashboard-header">
+      <h2 class="dashboard-title">
+        <span aria-hidden="true">📊</span>
+        <span data-i18n="ui.dashTitle">Emotion Dashboard</span>
+      </h2>
+      <div class="dashboard-actions">
+        <button class="btn btn-sm" id="exportSessionBtn" data-i18n="ui.exportSession">📊 Export Session</button>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+
+      <!-- Doughnut: session distribution -->
+      <div class="glass-card chart-card">
+        <div class="chart-title" data-i18n="ui.pieLabel">Session Distribution</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="pieChartCanvas" aria-label="Emotion distribution pie chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Line: live timeline -->
+      <div class="glass-card chart-card">
+        <div class="chart-title" data-i18n="ui.timelineLabel">Live Emotion Timeline</div>
+        <div class="chart-canvas-wrap">
+          <canvas id="timelineChartCanvas" aria-label="Emotion timeline chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Session stats -->
+      <div class="glass-card chart-card">
+        <div class="chart-title" data-i18n="ui.statsTitle">Session Stats</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label" data-i18n="ui.totalDetections">Total Detections</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label" data-i18n="ui.dominantEmotion">Dominant Emotion</div>
+            <div class="stat-value" id="statDominant" style="font-size:1.1rem">--</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label" data-i18n="ui.sessionDuration">Duration</div>
+            <div class="stat-value" id="statDuration">0:00</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label" data-i18n="ui.inferenceLabel">Inference</div>
+            <div class="stat-value" id="statInference" style="color:var(--success)">--</div>
+            <div class="stat-sub">target &lt;200ms</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label" data-i18n="ui.accuracy">AI Accuracy</div>
+            <div class="stat-value" id="statAccuracy">--</div>
+            <div class="stat-sub">user feedback</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label" data-i18n="ui.fpsLabel">FPS</div>
+            <div class="stat-value" id="fpsStat">--</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════════
+     FOOTER
+     ══════════════════════════════════════════════════════════ -->
+<footer>
+  <span>© 2025 MoodScan Pro &nbsp;·&nbsp; Powered by face-api.js + Chart.js</span>
+  <div class="privacy-badge" data-i18n="ui.privacyBadge">🔒 100% On-Device · No Data Sent</div>
+</footer>
+
+<!-- ══════════════════════════════════════════════════════════
+     SCRIPTS (order matters — no ES modules, works with file://)
+     ══════════════════════════════════════════════════════════ -->
+<script src="js/emotion-engine.js"></script>
+<script src="js/analytics.js"></script>
+<script src="js/feedback.js"></script>
+<script src="js/app.js"></script>
+
+<!-- Sync header lang select changes to sidebar select -->
+<script>
+  (function () {
+    const header = document.getElementById('langSelectHeader');
+    const sidebar = document.getElementById('langSelect');
+
+    function syncSelects(source, target) {
+      source?.addEventListener('change', () => {
+        if (target) target.value = source.value;
+        document.getElementById('langSelect')?.dispatchEvent(new Event('change'));
+      });
+    }
+
+    // Use header select as primary (visible all the time)
+    header?.addEventListener('change', () => {
+      if (sidebar) sidebar.value = header.value;
+      // Trigger the main change handler (bound in app.js to #langSelect)
+      sidebar?.dispatchEvent(new Event('change'));
+    });
+
+    // Reflect initial saved lang in header
+    const saved = localStorage.getItem('moodscan_lang') || 'en';
+    if (header) header.value = saved;
+    if (sidebar) sidebar.value = saved;
+
+    // Update feedback stats whenever settings opens
+    document.getElementById('settingsBtn')?.addEventListener('click', () => {
+      const stats = window.MoodScanFeedback?.getStats?.() || { total: 0, correct: 0, incorrect: 0 };
+      document.getElementById('fbs-total')?.let?.(el => el.textContent = stats.total);
+      document.getElementById('fbs-correct')?.let?.(el => el.textContent = stats.correct);
+      document.getElementById('fbs-incorrect')?.let?.(el => el.textContent = stats.incorrect);
+
+      // Inline fix for environments without .let()
+      const t = document.getElementById('fbs-total');
+      const c = document.getElementById('fbs-correct');
+      const i = document.getElementById('fbs-incorrect');
+      if (t) t.textContent = stats.total;
+      if (c) c.textContent = stats.correct;
+      if (i) i.textContent = stats.incorrect;
+    });
+  })();
+</script>
+
+</body>
+</html>
