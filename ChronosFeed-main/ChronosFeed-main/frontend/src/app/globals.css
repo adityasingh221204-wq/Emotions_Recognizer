@@ -1,0 +1,246 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Share+Tech+Mono&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  --font-sans: 'Outfit', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  /* Default Theme: Chronos Neo-Cyberpunk */
+  --bg-color: #030712;
+  --bg-grid: rgba(99, 102, 241, 0.04);
+  --color-primary: 99 102 241;    /* Indigo */
+  --color-secondary: 168 85 247;  /* Purple */
+  --color-accent: 236 72 153;     /* Pink */
+  --card-bg: rgba(17, 24, 39, 0.75);
+  --border-color: rgba(99, 102, 241, 0.18);
+  --text-color: #f3f4f6;
+  --text-muted: #9ca3af;
+  --glow-color: 99 102 241;
+}
+
+.theme-steam {
+  --font-sans: 'Outfit', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  /* Theme: Victorian SteamNet */
+  --bg-color: #0e0a07;
+  --bg-grid: rgba(217, 119, 6, 0.03);
+  --color-primary: 217 119 6;    /* Brass / Amber */
+  --color-secondary: 180 83 9;    /* Copper / Bronze */
+  --color-accent: 245 158 11;    /* Gold */
+  --card-bg: rgba(24, 20, 17, 0.82);
+  --border-color: rgba(217, 119, 6, 0.22);
+  --text-color: #f5f5f4;
+  --text-muted: #a8a29e;
+  --glow-color: 217 119 6;
+}
+
+.theme-roman {
+  --font-sans: 'Outfit', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  /* Theme: Neo-Roman Antiquity */
+  --bg-color: #0a0410;
+  --bg-grid: rgba(126, 34, 206, 0.04);
+  --color-primary: 139 92 246;   /* Imperial Purple */
+  --color-secondary: 109 40 217;  /* Dark Purple */
+  --color-accent: 234 179 8;     /* Aureus Gold */
+  --card-bg: rgba(20, 12, 30, 0.8);
+  --border-color: rgba(139, 92, 246, 0.22);
+  --text-color: #faf5ff;
+  --text-muted: #c084fc;
+  --glow-color: 139 92 246;
+}
+
+.theme-mars {
+  --font-sans: 'Outfit', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: 'Share Tech Mono', monospace;
+
+  /* Theme: Mars 1900 Steam Space */
+  --bg-color: #0f0404;
+  --bg-grid: rgba(239, 68, 68, 0.03);
+  --color-primary: 239 68 68;    /* Rust Red */
+  --color-secondary: 185 28 28;   /* Iron Red */
+  --color-accent: 249 115 22;    /* Glowing Sand Copper */
+  --card-bg: rgba(24, 10, 10, 0.85);
+  --border-color: rgba(239, 68, 68, 0.25);
+  --text-color: #fef2f2;
+  --text-muted: #fca5a5;
+  --glow-color: 239 68 68;
+}
+
+@theme {
+  --color-background: var(--bg-color);
+  --color-text-main: var(--text-color);
+  --color-text-dim: var(--text-muted);
+  --color-primary-base: rgb(var(--color-primary));
+  --color-secondary-base: rgb(var(--color-secondary));
+  --color-accent-base: rgb(var(--color-accent));
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-serif);
+  --font-mono: var(--font-mono);
+}
+
+/* Base Styles */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  transition: background-color 0.6s cubic-bezier(0.16, 1, 0.3, 1), color 0.4s ease;
+}
+
+/* Custom Grid Background Overlay */
+.divergence-grid {
+  background-image: 
+    linear-gradient(rgba(var(--color-primary), 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--color-primary), 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: var(--card-bg);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: border-color 0.4s ease, box-shadow 0.4s ease, background 0.4s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(var(--color-accent), 0.35);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), 0 0 15px 1px rgba(var(--glow-color), 0.08);
+}
+
+.glass-button {
+  background: rgba(var(--color-primary), 0.1);
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-button:hover {
+  background: rgba(var(--color-primary), 0.22);
+  border-color: rgb(var(--color-accent));
+  box-shadow: 0 0 12px 1px rgba(var(--glow-color), 0.3);
+  transform: translateY(-1px);
+}
+
+/* Temporal Line Elements */
+.temporal-line {
+  background: linear-gradient(180deg, 
+    rgba(var(--color-primary), 0.1) 0%, 
+    rgba(var(--color-accent), 0.8) 50%, 
+    rgba(var(--color-primary), 0.1) 100%
+  );
+  box-shadow: 0 0 8px rgba(var(--glow-color), 0.4);
+}
+
+.temporal-node {
+  background-color: var(--bg-color);
+  border: 2px solid rgb(var(--color-accent));
+  box-shadow: 0 0 10px rgb(var(--color-accent)), inset 0 0 4px rgb(var(--color-accent));
+  transition: all 0.3s ease;
+}
+
+.temporal-node:hover {
+  transform: scale(1.3);
+  background-color: rgb(var(--color-accent));
+  box-shadow: 0 0 18px 4px rgb(var(--color-accent));
+}
+
+/* Scanline/Monitor Effects */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanlines::before {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+  z-index: 10;
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Glow Utilities */
+.text-glow {
+  text-shadow: 0 0 10px rgba(var(--glow-color), 0.5), 0 0 20px rgba(var(--glow-color), 0.3);
+}
+
+.border-glow {
+  box-shadow: 0 0 15px rgba(var(--glow-color), 0.25);
+}
+
+/* Keyframe animations */
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(1.05);
+  }
+}
+
+.pulsing-aura {
+  animation: pulseGlow 4s infinite ease-in-out;
+}
+
+@keyframes glitch {
+  0% {
+    clip-path: inset(40% 0 61% 0);
+  }
+  20% {
+    clip-path: inset(92% 0 1% 0);
+  }
+  40% {
+    clip-path: inset(25% 0 58% 0);
+  }
+  60% {
+    clip-path: inset(80% 0 5% 0);
+  }
+  80% {
+    clip-path: inset(11% 0 85% 0);
+  }
+  100% {
+    clip-path: inset(50% 0 43% 0);
+  }
+}
+
+.glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 2px;
+  text-shadow: -1px 0 #ff00c1;
+  top: 0;
+  color: var(--text-color);
+  background: var(--bg-color);
+  overflow: hidden;
+  clip: rect(0, 900px, 0, 0); 
+  animation: glitch 1.5s infinite linear alternate-reverse;
+}
+
+.glitch-text::before {
+  content: attr(data-text);
+  position: absolute;
+  left: -2px;
+  text-shadow: -1px 0 #00ffff;
+  top: 0;
+  color: var(--text-color);
+  background: var(--bg-color);
+  overflow: hidden;
+  clip: rect(0, 900px, 0, 0); 
+  animation: glitch 2.5s infinite linear alternate-reverse;
+}
